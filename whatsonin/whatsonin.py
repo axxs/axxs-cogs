@@ -224,13 +224,17 @@ class Whatsonin(commands.Cog):
 
     @commands.command(name="whatsonin")
     async def whatsonin(self, ctx: commands.Context, *, query: str) -> None:
-        """List upcoming events for a place in the active region.
+        """List upcoming events for a place.
 
         Examples:
         `[p]whatsonin hobart`
-        `[p]whatsonin launceston --days 14 --limit 5`
+        `[p]whatsonin launceston --days 14 --limit 20`
 
-        Set the region with `[p]set whatsonin active_region tasmania` or `sydney`.
+        Flags: `--days N` (1-90, default 30), `--limit N` (1-30, default 10).
+
+        See available places with `[p]whatsoninplaces`. For source-by-source
+        diagnostics use `[p]whatsonindiag <place>`. Admin commands for adding
+        places and sources live under `[p]help Whatsonin`.
         """
         placename, limit_override, days_override = parse_command_args(query)
         if not placename:

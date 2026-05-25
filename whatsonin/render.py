@@ -93,7 +93,7 @@ def _render_empty(place: Place, days: int) -> dict:
         f"No events in the next {days} days. "
         f"Try `--days 60`, or add a source: "
         f"`[p]wsa source add {place.key} ics <url>`."
-        f"\n_`[p]help Whatsonin` for flags, more places, and options._"
+        f"\n_`[p]help whatsonin` for flags · `[p]whatsoninplaces` for other places._"
     )
     return {
         "title": f"What's on in {place.display_name}",
@@ -139,7 +139,7 @@ def render_places_listing(
             f"\n⚠ {n} issue{suffix}. `[p]whatsonin diag {place.key}` for details."
         )
 
-    footer += "\n_`[p]help Whatsonin` for flags, more places, and options._"
+    footer += "\n_`[p]help whatsonin` for flags · `[p]whatsoninplaces` for other places._"
 
     truncation_template = "\n…and {n} more. Try `--limit 30`."
     reserve = len(truncation_template.format(n=len(events)))
