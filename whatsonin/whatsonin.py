@@ -96,7 +96,7 @@ class Whatsonin(commands.Cog):
         self._last_diag: dict = {}
 
     async def cog_load(self) -> None:
-        await register_config(self.config)
+        register_config(self.config)
         self._session = aiohttp.ClientSession()
         await self._ensure_resolver()
 

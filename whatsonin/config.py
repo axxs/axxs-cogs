@@ -9,8 +9,8 @@ def get_config(cog) -> Config:
     return Config.get_conf(cog, identifier=9876543210123456789, force_registration=True)
 
 
-async def register_config(config: Config) -> None:
-    await config.register_global(
+def register_config(config: Config) -> None:
+    config.register_global(
         active_region=DEFAULT_REGION,
         default_limit=10,
         default_days=30,
