@@ -18,3 +18,4 @@ def register_config(config: Config) -> None:
         cache_ttl_seconds=600,
         eventbrite_locale="en-AU,en;q=0.9",
     )
+    config.register_guild(places={})
