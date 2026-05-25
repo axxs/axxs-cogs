@@ -2,7 +2,12 @@ import pytest
 
 from tests.conftest import FakeConfig
 from whatsonin.models import Source
-from whatsonin.stores import GuildStore, PackStore, PlaceStore
+from whatsonin.stores import (
+    GuildStore,
+    PackStore,
+    PlaceStore,
+    copy_pack_place_to_guild,
+)
 
 
 # ---------- PackStore ----------
@@ -158,3 +163,66 @@ async def test_place_store_guild_shadows_pack_for_same_key():
     assert place is not None
     assert place.display_name == "Hobart (custom)"
     assert place.sources[0].kind == "ics"
+
+
+# ---------- copy_pack_place_to_guild ----------
+
+@pytest.mark.asyncio
+async def test_copy_pack_place_to_guild_inherits_sources_aliases_display_name():
+    config = FakeConfig()
+    guild = GuildStore(config, guild_id=1)
+    pack = PackStore("tasmania")
+
+    inherited = await copy_pack_place_to_guild(guild, pack, "hobart")
+
+    # Returned sources match what was in the pack
+    assert len(inherited) >= 1
+    assert any(s.kind == "eventbrite" for s in inherited)
+
+    # The guild place is now self-contained with all pack data
+    place = await guild.get("hobart")
+    assert place is not None
+    assert place.display_name == "Hobart"
+    assert place.sources == inherited
+    assert "hbt" in place.aliases  # pack aliases preserved
+
+
+@pytest.mark.asyncio
+async def test_copy_pack_place_to_guild_noop_when_already_in_guild():
+    config = FakeConfig()
+    guild = GuildStore(config, guild_id=1)
+    pack = PackStore("tasmania")
+
+    # Pre-existing guild place
+    await guild.add_place("hobart", display_name="Hobart (custom)")
+    await guild.add_source(
+        "hobart", Source(kind="ics", spec={"url": "https://x"})
+    )
+
+    inherited = await copy_pack_place_to_guild(guild, pack, "hobart")
+
+    assert inherited == ()  # no inheritance performed
+    place = await guild.get("hobart")
+    assert place.display_name == "Hobart (custom)"
+    assert place.sources[0].kind == "ics"  # unchanged
+
+
+@pytest.mark.asyncio
+async def test_copy_pack_place_to_guild_noop_when_pack_missing_key():
+    config = FakeConfig()
+    guild = GuildStore(config, guild_id=1)
+    pack = PackStore("tasmania")
+
+    inherited = await copy_pack_place_to_guild(guild, pack, "melbourne")
+
+    assert inherited == ()
+    assert await guild.get("melbourne") is None
+
+
+@pytest.mark.asyncio
+async def test_copy_pack_place_to_guild_handles_none_pack():
+    """No active pack at all — function returns empty without raising."""
+    config = FakeConfig()
+    guild = GuildStore(config, guild_id=1)
+    inherited = await copy_pack_place_to_guild(guild, None, "anything")
+    assert inherited == ()

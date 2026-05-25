@@ -16,7 +16,7 @@ from .places import PlaceResolver, RegionNotFoundError
 from .providers import PROVIDERS, EventbriteProvider, IcsProvider, ManualProvider
 from .regions import DEFAULT_REGION
 from .render import render_places_listing
-from .stores import GuildStore, PackStore, PlaceStore
+from .stores import GuildStore, PackStore, PlaceStore, copy_pack_place_to_guild
 
 log = logging.getLogger("red.whatsonin")
 
@@ -537,22 +537,37 @@ class Whatsonin(commands.Cog):
             return
 
         store = GuildStore(self.config, ctx.guild)
+        await self._ensure_resolver()
+        region = self._resolver_region or DEFAULT_REGION
+        try:
+            pack = PackStore(region)
+        except RegionNotFoundError:
+            pack = None
+        inherited = await copy_pack_place_to_guild(store, pack, key)
+
         try:
             place = await store.add_source(key, source)
         except KeyError:
             await ctx.send(
-                f"No place `{key}` in this guild. Create it first with "
-                f"`[p]wsa add {key}`."
+                f"No place `{key}` in this guild or bundled pack. "
+                f"Create it first with `[p]wsa add {key}`."
             )
             return
         log.info(
-            "admin source add guild=%s key=%s kind=%s by=%s",
-            ctx.guild.id, key, kind, ctx.author,
+            "admin source add guild=%s key=%s kind=%s by=%s inherited=%d",
+            ctx.guild.id, key, kind, ctx.author, len(inherited),
         )
-        await ctx.send(
+        msg = (
             f"✅ Added {kind} source to **{place.display_name}** "
             f"(validation found {len(result.events)} upcoming events)."
         )
+        if inherited:
+            kinds = ", ".join(s.kind for s in inherited)
+            msg += (
+                f"\nInherited {len(inherited)} source(s) from the bundled pack "
+                f"({kinds}). `[p]wsa source list {key}` to review."
+            )
+        await ctx.send(msg)
 
     @admin_source.command(name="remove")
     async def admin_source_remove(
