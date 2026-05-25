@@ -92,7 +92,7 @@ def _render_empty(place: Place, days: int) -> dict:
     description = (
         f"No events in the next {days} days. "
         f"Try `--days 60`, or add a source: "
-        f"`[p]whatsonin source {place.key} add ics <url>`."
+        f"`[p]wsa source add {place.key} ics <url>`."
     )
     return {
         "title": f"What's on in {place.display_name}",

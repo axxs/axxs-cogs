@@ -182,7 +182,7 @@ def test_render_places_listing_empty_includes_helpful_prompt():
     desc = result["description"]
     assert "No events in the next 30 days" in desc
     assert "--days 60" in desc
-    assert "[p]whatsonin source hobart add" in desc
+    assert "[p]wsa source add hobart" in desc
 
 
 def test_render_places_listing_warnings_renders_summary_line():

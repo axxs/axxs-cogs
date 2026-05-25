@@ -457,7 +457,7 @@ class Whatsonin(commands.Cog):
         )
         await ctx.send(
             f"Added place **{place.display_name}** (`{place.key}`). "
-            f"Add a source with `[p]wsa source {place.key} add <kind> <spec>`."
+            f"Add a source with `[p]wsa source add {place.key} <kind> <spec>`."
         )
 
     @whatsonin_admin.command(name="remove")
@@ -509,8 +509,9 @@ class Whatsonin(commands.Cog):
     ) -> None:
         """Add a source to a place; validates with one fetch.
 
-        `[p]wsa source hobart add eventbrite australia--hobart`
-        `[p]wsa source hobart add ics https://example.com/cal.ics`
+        `[p]wsa source add hobart eventbrite australia--hobart`
+        `[p]wsa source add hobart ics https://example.com/cal.ics`
+        `[p]wsa source add hobart rss https://example.com/events/feed/`
         """
         kind = kind.strip().lower()
         if kind not in PROVIDERS:

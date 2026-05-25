@@ -49,13 +49,13 @@ Use the `whatsonin_admin` group (alias `wsa`) to add your own places without tou
 | `[p]wsa add <key> [display_name]` | Create a new guild place |
 | `[p]wsa remove <key>` | Remove a guild place |
 | `[p]wsa places` | List places configured in this guild |
-| `[p]wsa source <key> add <kind> <spec>` | Add a source. Validates with one fetch before saving. |
-| `[p]wsa source <key> remove <index>` | Remove a source by index |
-| `[p]wsa source <key> list` | List sources on a place |
-| `[p]wsa alias <key> add <alias>` | Add an alias |
-| `[p]wsa alias <key> remove <alias>` | Remove an alias |
-| `[p]wsa manual <key> add "<title>" <iso-datetime> [--venue X] [--url X] [--end ISO]` | Add a manually-entered event |
-| `[p]wsa manual <key> remove <event-index>` | Remove a manual event |
+| `[p]wsa source add <key> <kind> <spec>` | Add a source. Validates with one fetch before saving. |
+| `[p]wsa source remove <key> <index>` | Remove a source by index |
+| `[p]wsa source list <key>` | List sources on a place |
+| `[p]wsa alias add <key> <alias>` | Add an alias |
+| `[p]wsa alias remove <key> <alias>` | Remove an alias |
+| `[p]wsa manual add <key> "<title>" <iso-datetime> [--venue X] [--url X] [--end ISO]` | Add a manually-entered event |
+| `[p]wsa manual remove <key> <event-index>` | Remove a manual event |
 
 ### Bot owner
 
