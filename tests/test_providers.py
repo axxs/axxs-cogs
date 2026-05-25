@@ -70,6 +70,18 @@ async def test_eventbrite_provider_uses_in_person_url_filter():
     assert len(result.events) >= 1
 
 
+def test_merge_handles_mixed_naive_and_aware_datetimes():
+    """Eventbrite can produce naive datetimes for date-only events; RSS
+    always produces aware. Sorting must not raise when both are present."""
+    naive = Event("All-day fair", datetime(2026, 6, 1), None, None, None, "eventbrite")
+    aware = Event(
+        "Evening talk", datetime(2026, 6, 2, 19, tzinfo=timezone.utc),
+        None, None, None, "rss",
+    )
+    merged = merge_events([naive, aware], limit=10)
+    assert [e.title for e in merged] == ["All-day fair", "Evening talk"]
+
+
 def test_merge_dedupes_and_sorts():
     events = [
         Event("Duplicate", datetime(2026, 6, 2, tzinfo=timezone.utc), None, "Venue", None, "eventbrite"),
