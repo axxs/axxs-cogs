@@ -1,0 +1,6 @@
+{
+    "author": ["axxs"],
+    "description": "Cogs by axxs for Red V3.",
+    "short": "axxs cogs",
+    "install_msg": "axxs-cogs added. Install a cog with [p]cog install axxs-cogs <name>."
+}

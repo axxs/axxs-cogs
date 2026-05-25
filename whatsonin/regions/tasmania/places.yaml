@@ -1,0 +1,75 @@
+places:
+  - key: hobart
+    display_name: Hobart
+    eventbrite_slug: australia--hobart
+    aliases: [hbt]
+
+  - key: launceston
+    display_name: Launceston
+    eventbrite_slug: australia--launceston
+
+  - key: devonport
+    display_name: Devonport
+    eventbrite_slug: australia--devonport
+
+  - key: burnie
+    display_name: Burnie
+    eventbrite_slug: australia--burnie
+
+  - key: ulverstone
+    display_name: Ulverstone
+    eventbrite_slug: australia--ulverstone
+
+  - key: queenstown
+    display_name: Queenstown
+    eventbrite_slug: australia--queenstown-tas
+
+  - key: sandy bay
+    display_name: Sandy Bay
+    eventbrite_slug: australia--hobart
+
+  - key: north hobart
+    display_name: North Hobart
+    eventbrite_slug: australia--hobart
+    aliases: [north-hobart, northhobart]
+
+  - key: battery point
+    display_name: Battery Point
+    eventbrite_slug: australia--hobart
+    aliases: [battery-point]
+
+  - key: glenorchy
+    display_name: Glenorchy
+    eventbrite_slug: australia--hobart
+
+  - key: new norfolk
+    display_name: New Norfolk
+    eventbrite_slug: australia--new-norfolk-tas
+    aliases: [new-norfolk]
+
+  - key: richmond
+    display_name: Richmond
+    eventbrite_slug: australia--richmond-tas
+
+  - key: port arthur
+    display_name: Port Arthur
+    eventbrite_slug: australia--port-arthur-tas
+    aliases: [port-arthur]
+
+  - key: st helens
+    display_name: St Helens
+    eventbrite_slug: australia--st-helens-tas
+    aliases: [st-helens]
+
+  - key: strahan
+    display_name: Strahan
+    eventbrite_slug: australia--strahan-tas
+
+  - key: smithton
+    display_name: Smithton
+    eventbrite_slug: australia--smithton-tas
+
+  - key: george town
+    display_name: George Town
+    eventbrite_slug: australia--george-town-tas
+    aliases: [george-town]

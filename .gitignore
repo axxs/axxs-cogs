@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local-only docs and assistant artefacts
+CLAUDE.md
+.claude/
+docs/superpowers/

@@ -1,0 +1,12 @@
+{
+    "author": ["axxs"],
+    "description": "List upcoming local events for a place. Aggregates Eventbrite city directories, public iCal feeds, and manually-added events. Bundled region packs ship with the cog; admins can add their own places per guild.",
+    "short": "What's on (Eventbrite, ICS, manual)",
+    "install_msg": "Whatsonin loaded. Default region is `tasmania`. Try `[p]whatsonin hobart` or `[p]whatsoninregions` to see the bundled packs. Admins can add per-guild places with `[p]wsa add`.",
+    "end_user_data_statement": "This cog stores per-guild place configuration (display names, source URLs/slugs, aliases, and any manually-entered events) added by server admins. It does not store data about individual end users.",
+    "min_bot_version": "3.5.0",
+    "min_python_version": [3, 8, 0],
+    "requirements": ["aiohttp", "PyYAML", "icalendar"],
+    "tags": ["events", "whatson", "eventbrite", "ics", "local"],
+    "hidden": false
+}

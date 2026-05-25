@@ -1,0 +1,16 @@
+places:
+  - key: sydney
+    display_name: Sydney
+    eventbrite_slug: australia--sydney
+
+  - key: parramatta
+    display_name: Parramatta
+    eventbrite_slug: australia--parramatta
+
+  - key: newtown
+    display_name: Newtown
+    eventbrite_slug: australia--newtown
+
+  - key: bondi
+    display_name: Bondi
+    eventbrite_slug: australia--bondi-beach
