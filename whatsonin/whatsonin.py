@@ -83,7 +83,10 @@ def parse_command_args(text: str) -> Tuple[str, int, int]:
 
 
 class Whatsonin(commands.Cog):
-    """List upcoming Eventbrite events for configured places in a region pack."""
+    """List upcoming local events for a place. Aggregates Eventbrite
+    directories, public ICS feeds, WordPress RSS event feeds, and
+    manually-added events. Bundled regional packs ship with the cog;
+    admins can add per-guild places via `[p]wsa`."""
 
     def __init__(self, bot):
         self.bot = bot
