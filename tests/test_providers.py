@@ -7,7 +7,7 @@ import pytest
 from aioresponses import aioresponses
 
 from whatsonin.aggregator import merge_events
-from whatsonin.models import Event
+from whatsonin.models import Event, Source
 from whatsonin.places import PlaceResolver
 from whatsonin.providers.eventbrite import (
     EventbriteProvider,
@@ -46,6 +46,28 @@ def test_parse_warns_when_jsonld_present_but_no_events():
     assert events == []
     assert warnings
     assert any("no event data" in w.lower() for w in warnings)
+
+
+@pytest.mark.asyncio
+async def test_eventbrite_provider_uses_in_person_url_filter():
+    """The /events--in-person/ URL excludes Eventbrite's worldwide online
+    events that would otherwise bleed into city directories."""
+    import aiohttp
+
+    source = Source(kind="eventbrite", spec={"slug": "australia--hobart"})
+    expected_url = "https://www.eventbrite.com/d/australia--hobart/events--in-person/"
+    html = (FIXTURES / "eventbrite_hobart.html").read_text()
+
+    with aioresponses() as mocked:
+        mocked.get(expected_url, body=html, content_type="text/html")
+        async with aiohttp.ClientSession() as session:
+            provider = EventbriteProvider(session, cache_ttl_seconds=0)
+            result = await provider.fetch(source, days=365, limit=5)
+
+    # If the provider hit the wrong URL, aioresponses would raise/skip and
+    # result.error would be set. Otherwise it parses the fixture as before.
+    assert result.error is None
+    assert len(result.events) >= 1
 
 
 def test_merge_dedupes_and_sorts():
@@ -97,7 +119,7 @@ async def test_eventbrite_provider_parses_fixture_html():
 
     html = (FIXTURES / "eventbrite_hobart.html").read_text()
     place = PlaceResolver("tasmania").resolve("hobart")
-    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events/"
+    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events--in-person/"
 
     with aioresponses() as mocked:
         mocked.get(url, body=html, content_type="text/html")
@@ -137,7 +159,7 @@ async def test_provider_logs_successful_fetch(caplog):
 
     html = (FIXTURES / "eventbrite_hobart.html").read_text()
     place = PlaceResolver("tasmania").resolve("hobart")
-    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events/"
+    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events--in-person/"
 
     with caplog.at_level(logging.INFO, logger="red.whatsonin"):
         with aioresponses() as mocked:
@@ -157,7 +179,7 @@ async def test_provider_logs_warning_when_no_event_data(caplog):
     import aiohttp
 
     place = PlaceResolver("tasmania").resolve("hobart")
-    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events/"
+    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events--in-person/"
 
     with caplog.at_level(logging.WARNING, logger="red.whatsonin"):
         with aioresponses() as mocked:
@@ -180,7 +202,7 @@ async def test_eventbrite_provider_uses_cache():
 
     html = (FIXTURES / "eventbrite_hobart.html").read_text()
     place = PlaceResolver("tasmania").resolve("hobart")
-    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events/"
+    url = f"https://www.eventbrite.com/d/{place.sources[0].spec["slug"]}/events--in-person/"
 
     with aioresponses() as mocked:
         mocked.get(url, body=html, content_type="text/html")

@@ -216,7 +216,9 @@ class EventbriteProvider(EventProvider):
                 warnings=[],
             )
 
-        url = f"{EVENTBRITE_BASE}/{slug}/events/"
+        # /events--in-person/ filters out online events that Eventbrite would
+        # otherwise dump into city directories regardless of geography.
+        url = f"{EVENTBRITE_BASE}/{slug}/events--in-person/"
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; WhatsoninRedCog/0.2; +https://github.com/)",
             "Accept-Language": self._locale,
