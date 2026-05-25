@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:mec="http://webnus.net/rss/mec/"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Devonport Events</title>
+    <link>https://example.com/events</link>
+    <description>Council events</description>
+    <item>
+      <title>Kinship Connections</title>
+      <link>https://example.com/event/kinship-connections</link>
+      <description><![CDATA[<p>Weekly gathering for community members.</p>]]></description>
+      <pubDate>Mon, 20 May 2026 10:00:00 +1000</pubDate>
+      <mec:startDate>2026-05-26</mec:startDate>
+      <mec:startHour>10:00 am</mec:startHour>
+      <mec:endDate>2026-05-26</mec:endDate>
+      <mec:endHour>11:00 am</mec:endHour>
+      <mec:location>The Hub</mec:location>
+    </item>
+    <item>
+      <title>Empower Golf Clinic</title>
+      <link>https://example.com/event/empower-golf-clinic</link>
+      <description><![CDATA[<p>Adaptive golf clinic.</p>]]></description>
+      <pubDate>Tue, 21 May 2026 09:00:00 +1000</pubDate>
+      <mec:startDate>2026-06-02</mec:startDate>
+      <mec:startHour>2:00 pm</mec:startHour>
+      <mec:endDate>2026-06-02</mec:endDate>
+      <mec:endHour>4:00 pm</mec:endHour>
+      <mec:location>Devonport Golf Club</mec:location>
+    </item>
+  </channel>
+</rss>

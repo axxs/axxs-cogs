@@ -8,6 +8,7 @@ dependencies = [
     "aiohttp>=3.8.0",
     "PyYAML>=6.0.0",
     "icalendar>=6.0.0",
+    "feedparser>=6.0.0",
 ]
 
 [project.optional-dependencies]

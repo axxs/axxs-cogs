@@ -40,7 +40,7 @@ def _cache_age_for(provider, source: Source) -> Optional[int]:
         return None
     if source.kind == "eventbrite":
         return provider.cache_age_seconds(source.spec.get("slug", ""))
-    if source.kind == "ics":
+    if source.kind in ("ics", "rss"):
         return provider.cache_age_seconds(source.spec.get("url", ""))
     return None
 
@@ -53,7 +53,7 @@ def _spec_from_args(kind: str, args: str) -> Optional[dict]:
         if not args or " " in args:
             return None
         return {"slug": args}
-    if kind == "ics":
+    if kind in ("ics", "rss"):
         if not args.startswith("http"):
             return None
         return {"url": args}

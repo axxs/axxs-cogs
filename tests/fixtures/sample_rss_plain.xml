@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Generic Blog</title>
+    <link>https://example.net/blog</link>
+    <description>Posts</description>
+    <item>
+      <title>Some Announcement</title>
+      <link>https://example.net/post/123</link>
+      <description><![CDATA[<p>A general blog post that happens to be in an events feed.</p>]]></description>
+      <pubDate>Mon, 20 May 2026 10:00:00 +1000</pubDate>
+    </item>
+  </channel>
+</rss>

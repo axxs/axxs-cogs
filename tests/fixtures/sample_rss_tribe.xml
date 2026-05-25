@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:ev="http://purl.org/rss/1.0/modules/event/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Tribe Site Events</title>
+    <link>https://example.org/events</link>
+    <description>Town events</description>
+    <item>
+      <title>Open Mic Night</title>
+      <link>https://example.org/event/open-mic</link>
+      <description><![CDATA[<p>Bring your guitar.</p>]]></description>
+      <pubDate>Mon, 20 May 2026 10:00:00 +1000</pubDate>
+      <ev:startdate>2026-06-15T19:00:00+10:00</ev:startdate>
+      <ev:enddate>2026-06-15T22:00:00+10:00</ev:enddate>
+      <ev:location>Town Hall</ev:location>
+    </item>
+  </channel>
+</rss>
