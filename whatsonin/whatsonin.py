@@ -552,6 +552,17 @@ class Whatsonin(commands.Cog):
             pack = None
         inherited = await copy_pack_place_to_guild(store, pack, key)
 
+        # Reject duplicate sources (same kind + same spec) on the place
+        existing_place = await store.get(key)
+        if existing_place is not None:
+            for idx, existing_src in enumerate(existing_place.sources):
+                if existing_src.kind == source.kind and existing_src.spec == source.spec:
+                    await ctx.send(
+                        f"This {kind} source is already on **{existing_place.display_name}** "
+                        f"at index `{idx}`. Use `[p]wsa source list {key}` to review."
+                    )
+                    return
+
         try:
             place = await store.add_source(key, source)
         except KeyError:
