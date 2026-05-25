@@ -2,6 +2,14 @@ import sys
 from unittest.mock import MagicMock
 
 # Red and discord are optional for unit tests of parsing/providers.
+#
+# CAVEAT: these mocks are permissive (MagicMock swallows any attribute
+# access). Tests will pass for code paths that fail on a real Red bot.
+# Three bugs escaped this way during initial deployment:
+#   1. awaiting Config.register_global (it is synchronous)
+#   2. passing a raw int to Config.guild (it needs an object with .id)
+#   3. skipping register_guild for guild-scope keys under force_registration=True
+# When in doubt, verify against a real Red instance on a live bot.
 if "redbot" not in sys.modules:
     redbot = MagicMock()
     redbot.core = MagicMock()
