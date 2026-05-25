@@ -11,6 +11,7 @@ SOURCE_MARKERS = {
     "eventbrite": "ᴱ",
     "ics": "ᴵ",
     "manual": "ᴹ",
+    "rss": "ᴿ",
 }
 FALLBACK_MARKER = "◌"
 
