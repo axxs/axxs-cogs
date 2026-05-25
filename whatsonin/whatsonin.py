@@ -251,7 +251,7 @@ class Whatsonin(commands.Cog):
 
         limit = limit_override or await self.config.default_limit()
         days = days_override or await self.config.default_days()
-        limit = max(1, min(limit, 10))
+        limit = max(1, min(limit, 30))
         days = max(1, min(days, 90))
 
         async with ctx.typing():
