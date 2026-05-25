@@ -6,6 +6,16 @@ from ..models import Place, Source
 from ..regions import normalize_name
 
 
+class _GuildRef:
+    """Minimal stand-in for discord.Guild. Red's Config.guild only reads
+    .id, so this lets GuildStore accept a raw int (used in tests) or any
+    object with an .id attribute (the real discord.Guild)."""
+    __slots__ = ("id",)
+
+    def __init__(self, id):
+        self.id = id
+
+
 class GuildStore:
     """Per-guild place storage backed by Red's Config.guild(...).
 
@@ -17,19 +27,22 @@ class GuildStore:
 
     def __init__(self, config, guild_id):
         self._config = config
-        self._guild_id = guild_id
+        if hasattr(guild_id, "id"):
+            self._guild_ref = guild_id
+        else:
+            self._guild_ref = _GuildRef(guild_id)
 
     # ---- raw read/write ----
 
     async def _read_all(self) -> dict:
-        group = self._config.guild(self._guild_id)
+        group = self._config.guild(self._guild_ref)
         data = await group.places()
         if data is None:
             return {}
         return dict(data)
 
     async def _write_all(self, data: dict) -> None:
-        group = self._config.guild(self._guild_id)
+        group = self._config.guild(self._guild_ref)
         await group.places.set(data)
 
     # ---- query ----

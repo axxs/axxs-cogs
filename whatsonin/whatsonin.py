@@ -122,7 +122,7 @@ class Whatsonin(commands.Cog):
             pack = PackStore(region)
         except RegionNotFoundError:
             pack = None
-        guild_store = GuildStore(self.config, guild.id) if guild is not None else None
+        guild_store = GuildStore(self.config, guild) if guild is not None else None
         return PlaceStore(guild=guild_store, pack=pack)
 
     async def _get_provider(self, kind: str):
@@ -450,7 +450,7 @@ class Whatsonin(commands.Cog):
 
         `[p]wsa add brisbane Brisbane`
         """
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         place = await store.add_place(key, display_name=display_name or key.title())
         log.info(
             "admin add guild=%s key=%s by=%s", ctx.guild.id, place.key, ctx.author
@@ -463,7 +463,7 @@ class Whatsonin(commands.Cog):
     @whatsonin_admin.command(name="remove")
     async def admin_remove(self, ctx: commands.Context, key: str) -> None:
         """Remove a place from this guild."""
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         ok = await store.remove_place(key)
         if ok:
             log.info("admin remove guild=%s key=%s by=%s", ctx.guild.id, key, ctx.author)
@@ -474,7 +474,7 @@ class Whatsonin(commands.Cog):
     @whatsonin_admin.command(name="places")
     async def admin_places(self, ctx: commands.Context) -> None:
         """List places configured in THIS guild (excludes bundled pack)."""
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         keys = await store.list_keys()
         if not keys:
             await ctx.send(
@@ -535,7 +535,7 @@ class Whatsonin(commands.Cog):
             await ctx.send(f"❌ Validation failed: {result.error}")
             return
 
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         try:
             place = await store.add_source(key, source)
         except KeyError:
@@ -558,7 +558,7 @@ class Whatsonin(commands.Cog):
         self, ctx: commands.Context, key: str, index: int
     ) -> None:
         """Remove the Nth source from a place. Use `source list` to find indexes."""
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         try:
             place = await store.remove_source(key, index)
         except KeyError:
@@ -576,7 +576,7 @@ class Whatsonin(commands.Cog):
     @admin_source.command(name="list")
     async def admin_source_list(self, ctx: commands.Context, key: str) -> None:
         """List sources on a place with their indexes."""
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         place = await store.get(key)
         if place is None:
             await ctx.send(f"No place `{key}` in this guild.")
@@ -603,7 +603,7 @@ class Whatsonin(commands.Cog):
     async def admin_alias_add(
         self, ctx: commands.Context, key: str, alias: str
     ) -> None:
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         try:
             place = await store.add_alias(key, alias)
         except KeyError:
@@ -615,7 +615,7 @@ class Whatsonin(commands.Cog):
     async def admin_alias_remove(
         self, ctx: commands.Context, key: str, alias: str
     ) -> None:
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         try:
             place = await store.remove_alias(key, alias)
         except KeyError:
@@ -654,7 +654,7 @@ class Whatsonin(commands.Cog):
         if "--end" in extras:
             end = extras.split("--end", 1)[1].split("--", 1)[0].strip() or None
 
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         place = await store.get(key)
         if place is None:
             await ctx.send(f"No place `{key}` in this guild.")
@@ -689,7 +689,7 @@ class Whatsonin(commands.Cog):
         self, ctx: commands.Context, key: str, event_index: int
     ) -> None:
         """Remove the Nth manual event from a place."""
-        store = GuildStore(self.config, ctx.guild.id)
+        store = GuildStore(self.config, ctx.guild)
         place = await store.get(key)
         if place is None:
             await ctx.send(f"No place `{key}` in this guild.")
