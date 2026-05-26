@@ -64,6 +64,34 @@ def test_format_event_line_unknown_source_uses_fallback_marker():
     assert line.endswith("◌")
 
 
+def test_format_event_line_in_progress_shows_on_now_and_ends():
+    now = datetime(2026, 5, 26, 12, tzinfo=timezone.utc)
+    line = format_event_line(
+        _event(
+            title="In Spirit",
+            start=datetime(2026, 3, 7, tzinfo=timezone.utc),
+            end=datetime(2026, 5, 30, tzinfo=timezone.utc),
+        ),
+        now=now,
+    )
+    # Reads as currently on, with today's date and the end relative time —
+    # not the misleading past start ("X months ago").
+    assert "on now" in line
+    assert "ends <t:" in line
+    assert "Tue 26 May" in line
+    assert "7 Mar" not in line
+
+
+def test_format_event_line_upcoming_unaffected_by_now():
+    now = datetime(2026, 5, 26, 12, tzinfo=timezone.utc)
+    line = format_event_line(
+        _event(start=datetime(2026, 6, 5, 20, 0, tzinfo=timezone.utc), end=None),
+        now=now,
+    )
+    assert line.startswith("Fri 5 Jun")
+    assert "on now" not in line
+
+
 from whatsonin.render import format_cache_age  # noqa: E402
 
 
@@ -237,6 +265,26 @@ def test_render_places_listing_includes_aggregated_parent_note():
     desc = result["description"]
     assert "Showing Hobart-wide events" in desc
     assert "Sandy Bay" in desc
+
+
+def test_render_places_listing_threads_now_into_on_now_rendering():
+    now = datetime(2026, 5, 26, 12, tzinfo=timezone.utc)
+    on_now = Event(
+        title="Current Exhibition",
+        start=datetime(2026, 3, 7, tzinfo=timezone.utc),
+        end=datetime(2026, 5, 30, tzinfo=timezone.utc),
+        venue="Gallery",
+        url="https://example.com/x",
+        source="rss",
+        description=None,
+    )
+    result = render_places_listing(
+        HOBART, [on_now], [], days=30, source_counts={"rss": 1},
+        cache_age_s=None, now=now,
+    )
+    desc = result["description"]
+    assert "on now" in desc
+    assert "3 months ago" not in desc and "7 Mar" not in desc
 
 
 def test_render_places_listing_truncates_when_description_overflows():

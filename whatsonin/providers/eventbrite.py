@@ -111,6 +111,13 @@ def _parse_schema_event(item: dict) -> Optional[Event]:
 
 PAST_EVENT_GRACE = timedelta(hours=2)
 
+# Events that started in the past are kept while still "in progress" (end in
+# the future). But MEC/WordPress feeds emit "always on" placeholders —
+# memberships, booking-confirmation pages — with multi-year end dates. A real
+# event, even a long exhibition, doesn't run for more than ~6 months, so a span
+# beyond this marks a non-event we drop rather than show as currently on.
+MAX_IN_PROGRESS_SPAN = timedelta(days=180)
+
 
 def filter_events(
     events: list[Event],
@@ -130,6 +137,7 @@ def filter_events(
     past_threshold = now - PAST_EVENT_GRACE
 
     filtered: list[Event] = []
+    dropped_long_span = 0
     for event in events:
         if event.start is None:
             filtered.append(event)
@@ -143,10 +151,16 @@ def filter_events(
         if end is not None and end.tzinfo is None:
             end = end.replace(tzinfo=timezone.utc)
 
-        # Keep in-progress events (end in future) even if start was long ago.
-        if end is not None and end >= now:
-            if start <= cutoff:
-                filtered.append(event)
+        # Keep events already under way (started, not yet ended) even though
+        # their start is in the past — unless the span is implausibly long,
+        # which marks an "always on" placeholder (see MAX_IN_PROGRESS_SPAN).
+        # The `start < now` gate keeps this off genuinely-upcoming long events,
+        # which fall through to the window check below and are kept on merit.
+        if end is not None and start < now <= end:
+            if end - start > MAX_IN_PROGRESS_SPAN:
+                dropped_long_span += 1
+                continue
+            filtered.append(event)
             continue
 
         if start < past_threshold:
@@ -154,6 +168,16 @@ def filter_events(
         if start > cutoff:
             continue
         filtered.append(event)
+
+    if dropped_long_span:
+        # Not surfaced to users (these are non-events on every fetch), but
+        # logged so an admin can explain a missing long-running event.
+        log.info(
+            "filter_events dropped %d in-progress event(s) over the %d-day "
+            "span cap (likely always-on placeholders)",
+            dropped_long_span,
+            MAX_IN_PROGRESS_SPAN.days,
+        )
 
     # Sorting is the aggregator's job (aggregator.merge_events). Keeping
     # it there avoids two sorts on the cog's single-provider path and is

@@ -16,8 +16,19 @@ def _as_aware(dt):
     return dt
 
 
-def merge_events(events: list[Event], limit: int) -> list[Event]:
-    """Dedupe, sort by start date, and cap results."""
+def merge_events(
+    events: list[Event], limit: int, *, now: datetime | None = None
+) -> list[Event]:
+    """Dedupe, sort by start date, and cap results.
+
+    Events already under way (started in the past, end still in the future)
+    sort as if they start today, so they interleave with genuinely-upcoming
+    events instead of sinking to the bottom under their past start date."""
+    if now is None:
+        now = datetime.now(timezone.utc)
+    elif now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+
     seen: set[tuple] = set()
     unique: list[Event] = []
 
@@ -29,10 +40,15 @@ def merge_events(events: list[Event], limit: int) -> list[Event]:
         unique.append(event)
 
     sentinel = datetime.max.replace(tzinfo=timezone.utc)
-    unique.sort(
-        key=lambda e: (
-            e.start is None,
-            _as_aware(e.start) or sentinel,
-        )
-    )
+
+    def sort_key(event: Event) -> tuple:
+        start = _as_aware(event.start)
+        if start is None:
+            return (True, sentinel)
+        end = _as_aware(event.end)
+        if start < now and end is not None and end >= now:
+            return (False, now)
+        return (False, start)
+
+    unique.sort(key=sort_key)
     return unique[:limit]

@@ -10,6 +10,7 @@ from whatsonin.aggregator import merge_events
 from whatsonin.models import Event, Source
 from whatsonin.places import PlaceResolver
 from whatsonin.providers.eventbrite import (
+    MAX_IN_PROGRESS_SPAN,
     EventbriteProvider,
     filter_events,
     parse_eventbrite_html,
@@ -123,6 +124,76 @@ def test_filter_keeps_event_with_future_end_even_if_started_in_past():
     events = [Event("Festival", started, ends, None, None, "eventbrite")]
     kept = filter_events(events, days=30, limit=10, now=FIXED_NOW)
     assert len(kept) == 1
+
+
+def test_filter_drops_in_progress_event_with_multiyear_span():
+    # MEC feeds emit "always on" placeholders (memberships, booking
+    # confirmations) with multi-year end dates; these are not real events.
+    started = FIXED_NOW - timedelta(days=500)
+    ends = FIXED_NOW + timedelta(days=1000)
+    events = [Event("Friends Membership", started, ends, None, None, "rss")]
+    assert filter_events(events, days=30, limit=10, now=FIXED_NOW) == []
+
+
+def test_filter_keeps_long_running_exhibition_within_span_cap():
+    # A genuine exhibition: started ~2 months ago, ends in a few weeks.
+    started = FIXED_NOW - timedelta(days=60)
+    ends = FIXED_NOW + timedelta(days=20)  # ~80-day span
+    events = [Event("In Spirit", started, ends, None, None, "rss")]
+    kept = filter_events(events, days=30, limit=10, now=FIXED_NOW)
+    assert len(kept) == 1
+
+
+def test_filter_span_cap_is_only_for_started_events():
+    # An announced long festival starting next week is NOT a placeholder; the
+    # span cap must not drop it (it has not started, so it's kept on merit).
+    starts = FIXED_NOW + timedelta(days=7)
+    ends = starts + timedelta(days=210)  # 210-day span, but in the future
+    events = [Event("Winter Festival", starts, ends, None, None, "eventbrite")]
+    kept = filter_events(events, days=30, limit=10, now=FIXED_NOW)
+    assert len(kept) == 1
+
+
+def test_filter_span_cap_boundary():
+    # Span exactly at the cap is kept (strict >); one second over is dropped.
+    started = FIXED_NOW - timedelta(days=1)
+    at_cap = Event(
+        "At cap", started, started + MAX_IN_PROGRESS_SPAN, None, None, "rss"
+    )
+    over_cap = Event(
+        "Over cap",
+        started,
+        started + MAX_IN_PROGRESS_SPAN + timedelta(seconds=1),
+        None, None, "rss",
+    )
+    assert len(filter_events([at_cap], days=365, limit=10, now=FIXED_NOW)) == 1
+    assert filter_events([over_cap], days=365, limit=10, now=FIXED_NOW) == []
+
+
+def test_merge_sorts_in_progress_event_by_now_not_past_start():
+    now = datetime(2026, 5, 26, 12, tzinfo=timezone.utc)
+    on_now = Event(
+        "Ongoing exhibition",
+        datetime(2026, 3, 7, tzinfo=timezone.utc),
+        datetime(2026, 6, 30, tzinfo=timezone.utc),
+        None, None, "rss",
+    )
+    tomorrow = Event(
+        "Tomorrow", datetime(2026, 5, 27, tzinfo=timezone.utc),
+        None, None, None, "eventbrite",
+    )
+    next_week = Event(
+        "Next week", datetime(2026, 5, 28, tzinfo=timezone.utc),
+        None, None, None, "eventbrite",
+    )
+    merged = merge_events([next_week, tomorrow, on_now], limit=10, now=now)
+    # The on-now event sorts as "today" rather than sinking under its
+    # March start date, so it interleaves at the top with same-day events.
+    assert [e.title for e in merged] == [
+        "Ongoing exhibition",
+        "Tomorrow",
+        "Next week",
+    ]
 
 
 @pytest.mark.asyncio

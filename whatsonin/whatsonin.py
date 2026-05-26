@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import Counter
+from datetime import datetime, timezone
 from typing import Optional, Tuple
 
 import aiohttp
@@ -169,12 +170,18 @@ class Whatsonin(commands.Cog):
         days: int,
         limit: int,
         store: Optional[PlaceStore] = None,
+        now: Optional[datetime] = None,
     ) -> tuple[list[Event], list[str], dict]:
         """Returns (events, warnings, diag).
 
         diag is keyed by source-index and contains per-source: kind, label,
         event_count, error, warnings, cache_age_s. Used by the diag command
-        and to compute the minimum cache age shown in the embed footer."""
+        and to compute the minimum cache age shown in the embed footer.
+
+        `now` is the reference instant for sorting in-progress events; pass
+        the same value to the renderer so the list and labels agree."""
+        if now is None:
+            now = datetime.now(timezone.utc)
         enable_eventbrite = await self.config.enable_eventbrite()
 
         all_events: list[Event] = []
@@ -220,7 +227,7 @@ class Whatsonin(commands.Cog):
             all_events.extend(result.events)
             diag[idx] = entry
 
-        return merge_events(all_events, limit), warnings, diag
+        return merge_events(all_events, limit, now=now), warnings, diag
 
     @commands.command(name="whatsonin")
     async def whatsonin(self, ctx: commands.Context, *, query: str) -> None:
@@ -261,9 +268,10 @@ class Whatsonin(commands.Cog):
         limit = max(1, min(limit, 30))
         days = max(1, min(days, 90))
 
+        now = datetime.now(timezone.utc)
         async with ctx.typing():
             events, warnings, diag = await self._fetch_for_place(
-                place, days=days, limit=limit, store=store
+                place, days=days, limit=limit, store=store, now=now
             )
         # Stash the most recent diag for the diag command
         self._last_diag[(ctx.guild.id if ctx.guild else 0, place.key)] = diag
@@ -294,6 +302,7 @@ class Whatsonin(commands.Cog):
             source_counts=source_counts,
             cache_age_s=cache_age_s,
             aggregated_parent=parent,
+            now=now,
         )
         await ctx.send(embed=discord.Embed(**payload))
 

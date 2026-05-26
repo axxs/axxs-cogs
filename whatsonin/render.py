@@ -76,11 +76,27 @@ def format_cache_age(seconds: Optional[int]) -> str:
     return f"cached {seconds // 3600} h ago"
 
 
-def format_event_line(event: Event) -> str:
-    parts = [_format_date(event.start)]
-    rel = _format_relative(event.start)
-    if rel:
-        parts.append(rel)
+def _is_on_now(event: Event, now: datetime) -> bool:
+    """True if the event has already started but hasn't ended yet."""
+    if event.start is None or event.end is None:
+        return False
+    start = event.start if event.start.tzinfo else event.start.replace(tzinfo=timezone.utc)
+    end = event.end if event.end.tzinfo else event.end.replace(tzinfo=timezone.utc)
+    return start < now <= end
+
+
+def format_event_line(event: Event, now: Optional[datetime] = None) -> str:
+    if now is None:
+        now = datetime.now(timezone.utc)
+    if _is_on_now(event, now):
+        # Show it as currently on with the end's relative time, rather than
+        # the misleading past start date ("X months ago").
+        parts = [_format_date(now), "on now", f"ends {_format_relative(event.end)}"]
+    else:
+        parts = [_format_date(event.start)]
+        rel = _format_relative(event.start)
+        if rel:
+            parts.append(rel)
     parts.append(_format_title(event.title, event.url))
     venue = _format_venue(event.venue)
     if venue:
@@ -111,10 +127,13 @@ def render_places_listing(
     source_counts: dict,
     cache_age_s: Optional[int],
     aggregated_parent: Optional[str] = None,
+    now: Optional[datetime] = None,
 ) -> dict:
     """Return a dict ready to splat into discord.Embed(**...)."""
     if not events:
         return _render_empty(place, days)
+    if now is None:
+        now = datetime.now(timezone.utc)
 
     header = f"_next {days} days_"
     if aggregated_parent:
@@ -150,7 +169,7 @@ def render_places_listing(
     used = 0
     rendered = 0
     for event in events:
-        line = format_event_line(event)
+        line = format_event_line(event, now=now)
         if used + len(line) + 1 > budget_for_events:
             break
         event_lines.append(line)
