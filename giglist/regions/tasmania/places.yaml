@@ -1,13 +1,18 @@
 # Tasmanian gig listings — bundled with the giglist cog.
 #
-# Each place fans out across three sources and dedupes via the aggregator.
-# Tasguide is Tasmania-wide (its category/music page mixes north + south); the
-# Humanitix slug narrows to the right city, and Ticketmaster's dmaId 707 is
-# all of Tasmania. For "hobart" the dedupe + sort means the local-pub gigs
-# (humanitix, tasguide hits in the south) surface alongside the big-venue
-# touring shows from Ticketmaster.
+# Each place fans out across (usually) three sources and dedupes via the
+# aggregator. Tasguide's `/category/music` is Tasmania-wide (it's the only
+# music-only filter Tasguide exposes — the regional /events/<region> pages
+# mix categories), Humanitix narrows by city slug (most Tasmanian towns
+# have their own `au--tas--<city>` page), and Ticketmaster's dmaId 707 is
+# all of Tasmania. So the geographic narrowing in practice comes from
+# Humanitix; Tasguide + Ticketmaster contribute statewide context.
+#
+# Burnie is the lone exception: Humanitix has no `au--tas--burnie` page,
+# so that place ships with only the two statewide sources.
 
 places:
+  # --- Greater Hobart ----------------------------------------------------
   - key: hobart
     display_name: Hobart
     aliases: [hbt]
@@ -22,6 +27,122 @@ places:
         spec: { dmaId: "707" }
         label: "Tasmania (TM)"
 
+  - key: north hobart
+    display_name: North Hobart
+    aliases: [north-hobart, northhobart, nhobart]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--north-hobart, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: sandy bay
+    display_name: Sandy Bay
+    aliases: [sandy-bay, sandybay]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--sandy-bay, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: battery point
+    display_name: Battery Point
+    aliases: [battery-point, batterypoint]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--battery-point, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: glenorchy
+    display_name: Glenorchy
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--glenorchy, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: kingston
+    display_name: Kingston
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--kingston, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: bridgewater
+    display_name: Bridgewater
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--bridgewater, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: huonville
+    display_name: Huonville
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--huonville, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: sorell
+    display_name: Sorell
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--sorell, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: new norfolk
+    display_name: New Norfolk
+    aliases: [new-norfolk, newnorfolk]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--new-norfolk, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: richmond
+    display_name: Richmond
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--richmond, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: port arthur
+    display_name: Port Arthur
+    aliases: [port-arthur, portarthur]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--port-arthur, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  # --- Launceston + North ----------------------------------------------
   - key: launceston
     display_name: Launceston
     aliases: [lst, launie]
@@ -36,6 +157,94 @@ places:
         spec: { dmaId: "707" }
         label: "Tasmania (TM)"
 
+  - key: george town
+    display_name: George Town
+    aliases: [george-town, georgetown]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--george-town, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: st helens
+    display_name: St Helens
+    aliases: [st-helens, sthelens]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--st-helens, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  # --- North-West Coast ------------------------------------------------
+  - key: devonport
+    display_name: Devonport
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--devonport, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: burnie
+    display_name: Burnie
+    # Humanitix has no `au--tas--burnie` page, so this place ships with
+    # only the two statewide sources. Tasguide + TM still surface any
+    # gigs that flag Burnie as their venue location.
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: ulverstone
+    display_name: Ulverstone
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--ulverstone, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: smithton
+    display_name: Smithton
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--smithton, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  # --- West Coast ------------------------------------------------------
+  - key: queenstown
+    display_name: Queenstown
+    # Disambiguated from NZ Queenstown — TAS-only in this pack.
+    aliases: [queenstown-tas, queenstowntas]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--queenstown, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  - key: strahan
+    display_name: Strahan
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+      - kind: humanitix
+        spec: { slug: au--tas--strahan, category: music }
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+
+  # --- Statewide -------------------------------------------------------
   - key: tasmania
     display_name: Tasmania (statewide)
     aliases: [tas, statewide, state]

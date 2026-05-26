@@ -20,6 +20,45 @@ def test_load_tasmania_pack_has_three_core_places():
     assert "tasmania" in places
 
 
+def test_load_tasmania_pack_covers_major_regional_towns():
+    """Pack should resolve the same Tasmanian towns whatsonin ships."""
+    places, _ = load_region("tasmania", REGIONS_DIR)
+    for key in (
+        "devonport", "burnie", "ulverstone", "smithton",
+        "queenstown", "strahan",
+        "george town", "st helens",
+        "sandy bay", "north hobart", "battery point", "glenorchy",
+        "new norfolk", "richmond", "port arthur",
+    ):
+        assert key in places, f"missing place: {key!r}"
+
+
+def test_burnie_omits_humanitix_because_slug_404s_upstream():
+    """Humanitix has no `au--tas--burnie` page. The pack must ship Burnie
+    without a Humanitix source so we don't surface a recurring 404."""
+    places, _ = load_region("tasmania", REGIONS_DIR)
+    burnie_kinds = sorted(s.kind for s in places["burnie"].sources)
+    assert "humanitix" not in burnie_kinds
+    assert burnie_kinds == ["tasguide", "ticketmaster"]
+
+
+def test_devonport_resolves_and_targets_devonport_humanitix():
+    places, aliases = load_region("tasmania", REGIONS_DIR)
+    devonport = places["devonport"]
+    humanitix = [s for s in devonport.sources if s.kind == "humanitix"]
+    assert humanitix and humanitix[0].spec.get("slug") == "au--tas--devonport"
+
+
+def test_aliases_resolve_for_suburbs_and_hyphenated_keys():
+    resolver = PlaceResolver("tasmania", REGIONS_DIR)
+    # Hyphenated user input must normalise the same as the space-form key
+    assert resolver.resolve("north-hobart").key == "north hobart"
+    assert resolver.resolve("port-arthur").key == "port arthur"
+    assert resolver.resolve("st-helens").key == "st helens"
+    # Disambiguating alias for Queenstown (vs the NZ city of the same name)
+    assert resolver.resolve("queenstown-tas").key == "queenstown"
+
+
 def test_hobart_place_bundles_all_three_providers():
     places, _ = load_region("tasmania", REGIONS_DIR)
     kinds = sorted(s.kind for s in places["hobart"].sources)
