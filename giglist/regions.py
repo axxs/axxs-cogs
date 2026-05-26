@@ -88,5 +88,6 @@ def _sources_from_entry(entry: dict, *, place_key: str, path: Path) -> list:
         kind = str(s["kind"]).strip()
         spec = dict(s.get("spec") or {})
         label = s.get("label")
-        out.append(Source(kind=kind, spec=spec, label=label))
+        scope = str(s.get("scope") or "local").strip().lower()
+        out.append(Source(kind=kind, spec=spec, label=label, scope=scope))
     return out

@@ -134,15 +134,22 @@ def render_places_listing(
     days: int,
     source_counts: dict,
     cache_age_s: Optional[int],
+    scope_note: Optional[str] = None,
     now: Optional[datetime] = None,
 ) -> dict:
-    """Return a dict ready to splat into discord.Embed(**...)."""
+    """Return a dict ready to splat into discord.Embed(**...).
+
+    `scope_note`: when set, rendered above the event list. Used by the cog
+    to say "No <Place>-specific gigs; showing wider listings below" when
+    every local source returned 0 but statewide sources had events."""
     if not events:
         return _render_empty(place, days, warnings=warnings)
     if now is None:
         now = datetime.now(timezone.utc)
 
     header = f"_next {days} days_\n"
+    if scope_note:
+        header += f"{scope_note}\n"
 
     footer_parts = []
     counts = format_source_counts(source_counts)

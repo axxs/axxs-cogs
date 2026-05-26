@@ -88,6 +88,50 @@ def test_render_empty_state_surfaces_warnings_with_diag_hint():
     assert place.key in desc
 
 
+def test_render_shows_scope_note_above_event_list_when_provided():
+    """When local sources came up empty but statewide context is being
+    shown, the renderer prefixes a clear note so the title isn't misleading."""
+    event = Event(
+        title="Statewide Gig",
+        start=datetime(2026, 7, 1, 19, tzinfo=timezone.utc),
+        end=None,
+        venue="A Venue",
+        url="https://x",
+        source="tasguide",
+    )
+    payload = render_places_listing(
+        _place(),
+        events=[event],
+        warnings=[],
+        days=30,
+        source_counts={"tasguide": 1},
+        cache_age_s=None,
+        scope_note=(
+            "_No Devonport-specific gigs in the next 30 days. "
+            "Showing wider Tasmania listings below._"
+        ),
+    )
+    desc = payload["description"]
+    assert "No Devonport-specific gigs" in desc
+    # Note must appear above the event line, not buried in the footer
+    assert desc.index("No Devonport-specific gigs") < desc.index("Statewide Gig")
+
+
+def test_render_omits_scope_note_when_not_provided():
+    """No regression for the common case: omitting scope_note must not
+    insert any 'wider listings' wording."""
+    event = Event(
+        title="A Gig", start=datetime(2026, 7, 1, tzinfo=timezone.utc),
+        end=None, venue=None, url=None, source="tasguide",
+    )
+    payload = render_places_listing(
+        _place(), events=[event], warnings=[], days=30,
+        source_counts={"tasguide": 1}, cache_age_s=None,
+    )
+    assert "wider" not in payload["description"]
+    assert "showing" not in payload["description"].lower()
+
+
 def test_render_source_counts_footer_uses_markers():
     counts_line = format_source_counts({"tasguide": 3, "humanitix": 2, "ticketmaster": 1})
     assert SOURCE_MARKERS["tasguide"] in counts_line

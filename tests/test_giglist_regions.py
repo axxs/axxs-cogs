@@ -73,10 +73,20 @@ def test_hobart_humanitix_source_targets_hobart_music():
     assert humanitix_sources[0].spec.get("category") == "music"
 
 
-def test_ticketmaster_source_uses_tasmania_dma():
+def test_hobart_ticketmaster_source_is_city_narrowed():
+    """Hobart's TM source uses `city=Hobart` (local) rather than
+    dmaId=707, so a Hobart query doesn't include Devonport/Launceston
+    touring shows. The statewide dmaId stays on the 'tasmania' place."""
     places, _ = load_region("tasmania", REGIONS_DIR)
-    tm_sources = [s for s in places["hobart"].sources if s.kind == "ticketmaster"]
-    assert tm_sources[0].spec.get("dmaId") in ("707", 707)
+    tm = [s for s in places["hobart"].sources if s.kind == "ticketmaster"][0]
+    assert tm.spec.get("city") == "Hobart"
+    assert "dmaId" not in tm.spec
+    assert tm.scope == "local"
+    # The statewide place still uses dmaId
+    statewide_tm = [
+        s for s in places["tasmania"].sources if s.kind == "ticketmaster"
+    ][0]
+    assert statewide_tm.spec.get("dmaId") in ("707", 707)
 
 
 def test_place_resolver_handles_aliases_and_prefix():
@@ -89,6 +99,57 @@ def test_place_resolver_handles_aliases_and_prefix():
     assert statewide is not None and statewide.key == "tasmania"
     # Prefix match
     assert resolver.resolve("hob").key == "hobart"
+
+
+def test_source_scope_defaults_to_local():
+    """Sources without an explicit `scope:` default to 'local' so existing
+    YAML and existing tests continue to work unchanged."""
+    s = Source(kind="humanitix", spec={"slug": "x"})
+    assert s.scope == "local"
+
+
+def test_load_region_parses_scope_field(tmp_path):
+    region_dir = tmp_path / "scoped"
+    region_dir.mkdir()
+    (region_dir / "places.yaml").write_text(
+        "places:\n"
+        "  - key: x\n"
+        "    display_name: X\n"
+        "    sources:\n"
+        "      - kind: humanitix\n"
+        "        spec: { slug: y }\n"
+        "      - kind: tasguide\n"
+        "        spec: { path: category/music }\n"
+        "        scope: statewide\n"
+    )
+    places, _ = load_region("scoped", tmp_path)
+    sources = places["x"].sources
+    assert sources[0].scope == "local"  # default
+    assert sources[1].scope == "statewide"  # explicit
+
+
+def test_devonport_uses_city_narrowed_ticketmaster_and_marks_tasguide_statewide():
+    """Small towns should use TM `city=<City>` (narrow) — not dmaId=707 —
+    so a Devonport query doesn't dump Hobart gigs into the result. Tasguide
+    has no music+region combo, so it stays statewide-scoped."""
+    places, _ = load_region("tasmania", REGIONS_DIR)
+    devonport = places["devonport"]
+    tm = [s for s in devonport.sources if s.kind == "ticketmaster"][0]
+    assert tm.spec.get("city") == "Devonport"
+    assert "dmaId" not in tm.spec
+    assert tm.scope == "local"
+    tg = [s for s in devonport.sources if s.kind == "tasguide"][0]
+    assert tg.scope == "statewide"
+    hx = [s for s in devonport.sources if s.kind == "humanitix"][0]
+    assert hx.scope == "local"
+
+
+def test_tasmania_statewide_place_marks_all_sources_statewide():
+    """The 'tasmania' place is deliberately statewide; no source should be
+    'local' there or the scope-note logic would mis-fire on it."""
+    places, _ = load_region("tasmania", REGIONS_DIR)
+    for src in places["tasmania"].sources:
+        assert src.scope == "statewide", f"{src.kind} on tasmania must be statewide"
 
 
 def test_load_region_rejects_entry_with_no_sources(tmp_path):

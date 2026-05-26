@@ -11,7 +11,7 @@ import aiohttp
 import discord
 from redbot.core import commands
 
-from .aggregator import merge_events
+from .aggregator import merge_events, merge_with_scope_priority
 from .config import get_config, register_config
 from .models import Event, Place, Source
 from .places import PlaceResolver, RegionNotFoundError
@@ -43,6 +43,31 @@ def parse_command_args(text: str) -> Tuple[str, int, int]:
     return placename, limit, days
 
 
+def _build_scope_note(place: Place, diag: dict, days: int) -> Optional[str]:
+    """Render an italic note like _No Devonport-specific gigs in the next
+    30 days. Showing wider listings below._ — only when every successful
+    local source returned 0 events AND at least one statewide source has
+    something. Returns None otherwise (the common case)."""
+    local_ok = [
+        d for d in diag.values()
+        if d.get("scope") == "local" and not d.get("error")
+    ]
+    statewide_ok = [
+        d for d in diag.values()
+        if d.get("scope") == "statewide" and not d.get("error")
+    ]
+    if not local_ok:
+        return None  # statewide-only place; never show the note
+    local_events = sum(d["events"] for d in local_ok)
+    statewide_events = sum(d["events"] for d in statewide_ok)
+    if local_events > 0 or statewide_events == 0:
+        return None
+    return (
+        f"_No {place.display_name}-specific gigs in the next {days} days. "
+        f"Showing wider listings below._"
+    )
+
+
 async def gather_events_for_place(
     place: Place,
     *,
@@ -58,15 +83,27 @@ async def gather_events_for_place(
     an unexpected exception in `fetch`) are captured into `diag` and the
     loop continues to the next source — so one bad source can never kill
     the rest of the aggregation. Extracted from the Giglist cog so the
-    orchestration is testable without instantiating the cog class."""
-    all_events: list[Event] = []
+    orchestration is testable without instantiating the cog class.
+
+    Events are partitioned by source `scope` (local vs statewide) and
+    merged via `merge_with_scope_priority` so local events always rank
+    above statewide ones — preventing a high-volume statewide source from
+    crowding genuine local gigs off the top of a small-town listing."""
+    # Fetch with headroom so the priority/dedupe has events to work with.
+    # The user-facing `limit` is enforced post-merge below.
+    prefetch_limit = max(30, limit * 3)
+
+    local_events: list[Event] = []
+    statewide_events: list[Event] = []
     warnings: list[str] = []
     diag: dict = {}
 
     for idx, source in enumerate(place.sources):
+        scope = getattr(source, "scope", "local")
         entry = {
             "kind": source.kind,
             "label": source.label,
+            "scope": scope,
             "events": 0,
             "error": None,
             "warnings": [],
@@ -86,7 +123,7 @@ async def gather_events_for_place(
             continue
 
         try:
-            result = await prov.fetch(source, days=days, limit=limit)
+            result = await prov.fetch(source, days=days, limit=prefetch_limit)
         except Exception as exc:
             # A provider raising (timeout, library bug, malformed spec) must
             # never abort the loop — the other sources must still be tried.
@@ -109,10 +146,22 @@ async def gather_events_for_place(
         if result.error:
             warnings.append(f"{prov.name}: {result.error}")
         warnings.extend(result.warnings)
-        all_events.extend(result.events)
+        if scope == "local":
+            local_events.extend(result.events)
+        else:
+            statewide_events.extend(result.events)
         diag[idx] = entry
 
-    return merge_events(all_events, limit, now=now), warnings, diag
+    if local_events:
+        merged = merge_with_scope_priority(
+            local=local_events, statewide=statewide_events, limit=limit, now=now
+        )
+    else:
+        # No local sources (or all local sources failed/disabled) — fall
+        # back to the simple statewide merge so empty local doesn't strand
+        # statewide events behind a never-fills priority queue.
+        merged = merge_events(statewide_events, limit, now=now)
+    return merged, warnings, diag
 
 
 def _spec_from_args(kind: str, args: str) -> Optional[dict]:
@@ -301,6 +350,7 @@ class Giglist(commands.Cog):
         source_counts = dict(Counter(e.source for e in events))
         ages = [d["cache_age_s"] for d in diag.values() if d["cache_age_s"] is not None]
         cache_age_s = min(ages) if ages else None
+        scope_note = _build_scope_note(place, diag, days)
         payload = render_places_listing(
             place,
             events,
@@ -308,6 +358,7 @@ class Giglist(commands.Cog):
             days=days,
             source_counts=source_counts,
             cache_age_s=cache_age_s,
+            scope_note=scope_note,
             now=now,
         )
         await ctx.send(embed=discord.Embed(**payload))

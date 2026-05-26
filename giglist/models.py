@@ -10,6 +10,13 @@ class Source:
     kind: str
     spec: dict
     label: Optional[str] = None
+    # 'local' (the place's actual geographic narrowing — e.g. humanitix
+    # `au--tas--devonport`, ticketmaster `city=Devonport`) vs 'statewide'
+    # (sources that can't be city-narrowed — e.g. tasguide's `/category/music`,
+    # ticketmaster `dmaId=707`). The cog uses this to render a "no
+    # <Place>-specific gigs; showing wider listings" note when all local
+    # sources came up empty.
+    scope: str = "local"
 
 
 @dataclass(frozen=True)
