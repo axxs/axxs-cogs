@@ -23,4 +23,4 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.setuptools.packages.find]
-include = ["whatsonin*"]
+include = ["whatsonin*", "giglist*"]

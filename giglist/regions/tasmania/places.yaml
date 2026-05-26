@@ -1,0 +1,51 @@
+# Tasmanian gig listings — bundled with the giglist cog.
+#
+# Each place fans out across three sources and dedupes via the aggregator.
+# Tasguide is Tasmania-wide (its category/music page mixes north + south); the
+# Humanitix slug narrows to the right city, and Ticketmaster's dmaId 707 is
+# all of Tasmania. For "hobart" the dedupe + sort means the local-pub gigs
+# (humanitix, tasguide hits in the south) surface alongside the big-venue
+# touring shows from Ticketmaster.
+
+places:
+  - key: hobart
+    display_name: Hobart
+    aliases: [hbt]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+        label: "Tasmania music"
+      - kind: humanitix
+        spec: { slug: au--tas--hobart, category: music }
+        label: "Hobart"
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+        label: "Tasmania (TM)"
+
+  - key: launceston
+    display_name: Launceston
+    aliases: [lst, launie]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+        label: "Tasmania music"
+      - kind: humanitix
+        spec: { slug: au--tas--launceston, category: music }
+        label: "Launceston"
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+        label: "Tasmania (TM)"
+
+  - key: tasmania
+    display_name: Tasmania (statewide)
+    aliases: [tas, statewide, state]
+    sources:
+      - kind: tasguide
+        spec: { path: category/music }
+        label: "Tasmania music"
+      - kind: humanitix
+        spec: { slug: au--tasmania, category: music }
+        label: "Tasmania"
+      - kind: ticketmaster
+        spec: { dmaId: "707" }
+        label: "Tasmania (TM)"

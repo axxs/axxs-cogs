@@ -1,0 +1,12 @@
+{
+    "author": ["axxs"],
+    "description": "List upcoming live music gigs for a place. Aggregates Tasguide (Tasmanian gig guide), Humanitix (community ticketing), and Ticketmaster's free Discovery API into a single deduped feed. Bundled with a Tasmania region pack out of the box.",
+    "short": "Local gig listings (Tasguide, Humanitix, Ticketmaster)",
+    "install_msg": "Giglist loaded. Default region is `tasmania`. Try `[p]giglist hobart` or `[p]giglistplaces`. To enable Ticketmaster (free, 5000 calls/day): get a Consumer Key at https://developer.ticketmaster.com and set it with `[p]giglistset ticketmaster_key <key>`.",
+    "end_user_data_statement": "This cog does not store data about individual end users. The bundled region pack (place names, source URLs/slugs) ships read-only with the cog; no per-guild state is persisted.",
+    "min_bot_version": "3.5.0",
+    "min_python_version": [3, 9, 0],
+    "requirements": ["aiohttp", "PyYAML"],
+    "tags": ["gigs", "music", "events", "tasmania", "hobart", "tasguide", "humanitix", "ticketmaster"],
+    "hidden": false
+}
