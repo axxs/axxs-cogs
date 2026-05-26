@@ -36,6 +36,11 @@ class Event:
     url: Optional[str]
     source: str
     description: Optional[str] = None
+    # Tagged by the cog after each provider fetch ('local' | 'statewide')
+    # so the renderer can group events into sections without re-reading
+    # diag. None when an Event is constructed outside the cog pipeline
+    # (e.g. in tests) — the renderer treats that as un-sectioned.
+    scope: Optional[str] = None
 
     def dedupe_key(self) -> tuple:
         title = " ".join(self.title.lower().split())

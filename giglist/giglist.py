@@ -146,6 +146,10 @@ async def gather_events_for_place(
         if result.error:
             warnings.append(f"{prov.name}: {result.error}")
         warnings.extend(result.warnings)
+        # Tag each event with this source's scope so the renderer can
+        # group them into sections without re-reading the diag.
+        for event in result.events:
+            event.scope = scope
         if scope == "local":
             local_events.extend(result.events)
         else:

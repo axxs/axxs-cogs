@@ -132,6 +132,108 @@ def test_render_omits_scope_note_when_not_provided():
     assert "showing" not in payload["description"].lower()
 
 
+def _ev(title, start, *, scope=None, source="tasguide", venue="V"):
+    e = Event(
+        title=title, start=start, end=None, venue=venue,
+        url="https://x", source=source,
+    )
+    e.scope = scope
+    return e
+
+
+def test_render_emits_two_sections_when_local_and_statewide_both_present():
+    """The user's request: when a place has both local hits and statewide
+    context, label them in clearly separated sections so a glance shows
+    which gigs are actually in the place vs wider Tasmania context."""
+    local_e = _ev(
+        "Launceston Lunchbox",
+        datetime(2026, 5, 26, 13, tzinfo=timezone.utc),
+        scope="local", source="humanitix",
+    )
+    statewide_e1 = _ev(
+        "Hobart Open Mic",
+        datetime(2026, 5, 27, 19, tzinfo=timezone.utc),
+        scope="statewide",
+    )
+    statewide_e2 = _ev(
+        "Hobart Trivia",
+        datetime(2026, 5, 28, 19, tzinfo=timezone.utc),
+        scope="statewide",
+    )
+    payload = render_places_listing(
+        Place(key="launceston", display_name="Launceston", sources=()),
+        events=[local_e, statewide_e1, statewide_e2],
+        warnings=[],
+        days=30,
+        source_counts={"humanitix": 1, "tasguide": 2},
+        cache_age_s=None,
+    )
+    desc = payload["description"]
+    # Both section headers are present
+    assert "Local in Launceston" in desc
+    assert "Wider" in desc  # "Wider Tasmania" or "Wider listings"
+    # Counts appear in/near each header
+    assert "(1)" in desc and "(2)" in desc
+    # Local section comes above the wider one
+    assert desc.index("Local in Launceston") < desc.index("Wider")
+    # Local event is in the local section (above 'Wider')
+    assert desc.index("Launceston Lunchbox") < desc.index("Wider")
+    # Statewide events are below the 'Wider' header
+    assert desc.index("Wider") < desc.index("Hobart Open Mic")
+    assert desc.index("Wider") < desc.index("Hobart Trivia")
+
+
+def test_render_no_sections_when_all_events_are_statewide():
+    """Devonport (or `[p]giglist tasmania`) — no local hits to separate —
+    must NOT emit empty-section headers. Flat list."""
+    events = [
+        _ev("A", datetime(2026, 5, 27, tzinfo=timezone.utc), scope="statewide"),
+        _ev("B", datetime(2026, 5, 28, tzinfo=timezone.utc), scope="statewide"),
+    ]
+    payload = render_places_listing(
+        Place(key="tasmania", display_name="Tasmania", sources=()),
+        events=events, warnings=[], days=30,
+        source_counts={"tasguide": 2}, cache_age_s=None,
+    )
+    desc = payload["description"]
+    assert "Local in" not in desc
+    assert "Wider" not in desc
+
+
+def test_render_no_sections_when_all_events_are_local():
+    events = [
+        _ev("A", datetime(2026, 5, 27, tzinfo=timezone.utc), scope="local"),
+        _ev("B", datetime(2026, 5, 28, tzinfo=timezone.utc), scope="local"),
+    ]
+    payload = render_places_listing(
+        Place(key="hobart", display_name="Hobart", sources=()),
+        events=events, warnings=[], days=30,
+        source_counts={"humanitix": 2}, cache_age_s=None,
+    )
+    desc = payload["description"]
+    assert "Local in" not in desc
+    assert "Wider" not in desc
+
+
+def test_render_existing_unscoped_events_remain_flat():
+    """Back-compat: events without a scope attribute (older tests, future
+    sources) render as a flat list — no spurious sectioning."""
+    e = Event(
+        "Plain", datetime(2026, 5, 27, tzinfo=timezone.utc),
+        None, "V", "https://x", "tasguide",
+    )
+    # No scope attribute set
+    payload = render_places_listing(
+        Place(key="x", display_name="X", sources=()),
+        events=[e], warnings=[], days=30,
+        source_counts={"tasguide": 1}, cache_age_s=None,
+    )
+    desc = payload["description"]
+    assert "Local in" not in desc
+    assert "Wider" not in desc
+    assert "Plain" in desc
+
+
 def test_render_source_counts_footer_uses_markers():
     counts_line = format_source_counts({"tasguide": 3, "humanitix": 2, "ticketmaster": 1})
     assert SOURCE_MARKERS["tasguide"] in counts_line

@@ -173,24 +173,57 @@ def render_places_listing(
     reserve = len(truncation_template.format(n=len(events)))
     budget_for_events = DESCRIPTION_MAX - len(header) - len(footer) - reserve
 
-    event_lines = []
-    used = 0
-    rendered = 0
-    for event in events:
-        line = format_event_line(event, now=now)
-        if used + len(line) + 1 > budget_for_events:
-            break
-        event_lines.append(line)
-        used += len(line) + 1
-        rendered += 1
-
-    body = "\n".join(event_lines)
-    remaining = len(events) - rendered
-    if remaining > 0:
-        body += truncation_template.format(n=remaining)
-
+    body = _render_body(place, events, now=now, budget=budget_for_events)
     description = header + body + footer
     return {
         "title": f"Gigs in {place.display_name}",
         "description": description,
     }
+
+
+def _render_body(place: Place, events: list, *, now: datetime, budget: int) -> str:
+    """Emit either a flat date-sorted list (when all events share one
+    scope, or are un-scoped) or two clearly-labelled sections — `**Local
+    in <Place>** _(N)_` followed by `**Wider Tasmania** _(N)_` — when
+    both scopes are present. Section ordering is local → wider so a
+    glance shows what's actually in the place first."""
+    local_events = [e for e in events if getattr(e, "scope", None) == "local"]
+    statewide_events = [e for e in events if getattr(e, "scope", None) == "statewide"]
+    sectioned = bool(local_events) and bool(statewide_events)
+
+    if sectioned:
+        sections = [
+            (f"**Local in {place.display_name}** _({len(local_events)})_", local_events),
+            (f"**Wider Tasmania** _({len(statewide_events)})_", statewide_events),
+        ]
+    else:
+        sections = [("", events)]
+
+    body_parts: list[str] = []
+    used = 0
+    rendered = 0
+    truncated = False
+    for i, (heading, group) in enumerate(sections):
+        if truncated:
+            break
+        if heading:
+            block = ("\n" if i > 0 else "") + heading
+            if used + len(block) > budget:
+                truncated = True
+                break
+            body_parts.append(block)
+            used += len(block) + 1  # +1 for the join "\n"
+        for event in group:
+            line = format_event_line(event, now=now)
+            if used + len(line) + 1 > budget:
+                truncated = True
+                break
+            body_parts.append(line)
+            used += len(line) + 1
+            rendered += 1
+
+    body = "\n".join(body_parts)
+    remaining = len(events) - rendered
+    if remaining > 0:
+        body += "\n…and {n} more. Try `--limit 30`.".format(n=remaining)
+    return body

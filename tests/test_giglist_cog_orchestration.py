@@ -54,6 +54,45 @@ NOW = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
 
 @pytest.mark.asyncio
+async def test_gather_tags_each_event_with_the_source_scope():
+    """For sectioned rendering: each Event the cog hands to the renderer
+    must carry the scope it came from, so the renderer can group local vs
+    statewide without inspecting diag."""
+    local_src = Source(kind="humanitix", spec={"slug": "x"}, scope="local")
+    state_src = Source(kind="tasguide", spec={"path": "y"}, scope="statewide")
+    place = Place(key="z", display_name="Z", sources=(local_src, state_src))
+
+    local_event = Event(
+        "Local Event", datetime(2026, 6, 1, tzinfo=timezone.utc),
+        None, "V", "https://x", "humanitix",
+    )
+    state_event = Event(
+        "Wider Event", datetime(2026, 5, 27, tzinfo=timezone.utc),
+        None, "V", "https://x", "tasguide",
+    )
+    get_provider, source_enabled = _stubbed_lookups(
+        {
+            "humanitix": _stub_provider(
+                "humanitix",
+                fetch_result=ProviderResult(events=[local_event], warnings=[]),
+            ),
+            "tasguide": _stub_provider(
+                "tasguide",
+                fetch_result=ProviderResult(events=[state_event], warnings=[]),
+            ),
+        }
+    )
+
+    events, _, _ = await gather_events_for_place(
+        place, get_provider=get_provider, source_enabled=source_enabled,
+        days=30, limit=10, now=NOW,
+    )
+    by_title = {e.title: e for e in events}
+    assert by_title["Local Event"].scope == "local"
+    assert by_title["Wider Event"].scope == "statewide"
+
+
+@pytest.mark.asyncio
 async def test_gather_events_for_place_carries_source_scope_in_diag():
     """diag entries must include each source's `scope` so the cog can
     compute when to show the 'no Place-specific gigs' note."""
